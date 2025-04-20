@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz AWS Cloud Practitioner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f0f4f8;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    .question-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .option {
+      display: block;
+      margin: 0.5rem 0;
+    }
+    .option button {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: #e2e8f0;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .option button:hover {
+      background-color: #cbd5e0;
+    }
+    .feedback {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #next-btn, #restart-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: #4299e1;
+      color: white;
+      cursor: pointer;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="question-card">
+    <div class="question" id="question">Cargando pregunta...</div>
+    <div id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button id="next-btn" onclick="siguientePregunta()">Siguiente</button>
+    <button id="restart-btn" onclick="reiniciarQuiz()">Reiniciar</button>
+  </div>
+
+  <script>
+    const preguntas = [
+    {
+      pregunta: "201.Una empresa tiene una aplicación web alojada en una única instancia EC2 que alcanza el 100% de utilización de CPU durante los picos de carga. En lugar de escalar verticalmente, decide desplegar tres instancias EC2 en paralelo. ¿Qué servicio de AWS debería usar para distribuir el tráfico equitativamente?",
+      opciones: [
+        "AWS Global Accelerator",
+        "AWS Application Load Balancer (ALB)",
+        "Amazon CloudFront",
+        "Transit VPC"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "202.¿Qué enfoque ayuda a eliminar errores humanos y automatizar la creación y actualización del entorno AWS?",
+      opciones: [
+        "Usar herramientas de testeo automatizado",
+        "Usar AWS CodeDeploy para construir y automatizar el entorno",
+        "Usar código para aprovisionar y operar la infraestructura",
+        "Migrar todas las aplicaciones a un host dedicado"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "203.¿Qué opción puede usar un cliente para proteger mejor su cuenta de AWS contra accesos no autorizados?",
+      opciones: [
+        "Restringir llamadas API desde SDKs o CLI",
+        "Crear una cuenta IAM por departamento y compartirla entre todos",
+        "Requerir MFA para todos los usuarios IAM",
+        "Establecer dos contraseñas por usuario"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "204.¿Qué servicio de AWS ofrece descuentos por volumen basados en el uso?",
+      opciones: [
+        "Amazon VPC",
+        "Amazon S3",
+        "Amazon Lightsail",
+        "AWS Cost Explorer"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "205.¿Qué factores deben considerarse al elegir la región en la que se desplegarán los recursos AWS? (Elige dos)",
+      opciones: [
+        "Nivel de seguridad de la región",
+        "Soberanía de los datos",
+        "Costo",
+        "Número planificado de VPCs",
+        "Proximidad geográfica"
+      ],
+      correcta: [1, 2]
+    },
+    {
+      pregunta: "206.Estás ejecutando una aplicación web financiera en AWS que usa una base de datos MySQL. ¿Qué servicio puede mejorar el rendimiento al permitir recuperar información desde cachés en memoria?",
+      opciones: [
+        "Amazon EFS",
+        "Amazon Neptune",
+        "Amazon ElastiCache",
+        "DAX"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "207.¿Cuál es una ventaja de usar Auto Scaling Groups con instancias EC2?",
+      opciones: [
+        "Cachea las respuestas más recientes en edge locations",
+        "Escala instancias EC2 en múltiples Zonas de Disponibilidad para mayor disponibilidad y tolerancia a fallos",
+        "Escala instancias EC2 entre múltiples regiones",
+        "Distribuye el tráfico entre AZs para mejorar el rendimiento"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "208.¿Por qué se ha ampliado la brecha del TCO entre AWS y la infraestructura tradicional en los últimos años?",
+      opciones: [
+        "AWS ayuda a los clientes a invertir más en CAPEX",
+        "AWS automatiza toda la operación de infraestructura",
+        "AWS sigue reduciendo el costo de la computación en la nube",
+        "AWS asegura recursos sin costo adicional"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "209.¿Cuáles de los siguientes son ejemplos de responsabilidad del cliente en cuanto a la 'seguridad EN la nube'? (Elige dos)",
+      opciones: [
+        "Diseñar el esquema de la aplicación",
+        "Reemplazar hardware físico",
+        "Crear un nuevo hipervisor",
+        "Gestión de parches de la infraestructura",
+        "Cifrado del sistema de archivos"
+      ],
+      correcta: [3, 4]
+    },
+    {
+      pregunta: "210.¿Cuál de los siguientes es un tipo de dispositivo MFA que los clientes pueden usar para proteger sus recursos de AWS?",
+      opciones: [
+        "AWS CloudHSM",
+        "Llave de seguridad U2F",
+        "Access Keys",
+        "Key Pair"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "211.Una empresa desea desplegar una aplicación .NET existente en AWS lo antes posible. ¿Qué servicio debe usar?",
+      opciones: [
+        "Amazon SNS",
+        "AWS Elastic Beanstalk",
+        "AWS Systems Manager",
+        "AWS Trusted Advisor"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "212.¿Cuál de los siguientes NO es un factor al estimar los costos de Amazon EC2? (Elige dos)",
+      opciones: [
+        "Tiempo que estarán activas las instancias",
+        "Número de grupos de seguridad",
+        "IPs elásticas asignadas",
+        "Número de Zonas Alojadas (Hosted Zones)",
+        "Cantidad de instancias"
+      ],
+      correcta: [1, 3]
+    },
+    {
+      pregunta: "213.¿Qué servicio de AWS ayuda a las empresas a extender su almacenamiento local a la nube de manera rentable?",
+      opciones: [
+        "AWS Data Pipeline",
+        "AWS Storage Gateway",
+        "Amazon Aurora",
+        "Amazon EFS"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "214.Una empresa está construyendo una plataforma de almacenamiento en la nube. Necesitan un servicio que escale automáticamente y minimice los costos. ¿Qué servicio deben usar?",
+      opciones: [
+        "Amazon S3",
+        "Amazon EBS",
+        "Amazon ECS",
+        "AWS Storage Gateway"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "215.Creaste un nuevo usuario IAM para un sysadmin. El primer día, no puede crear snapshots ni buckets. ¿Qué podría impedir esta tarea?",
+      opciones: [
+        "Solo el root puede acceder a EBS y S3",
+        "Debe contactar a soporte de AWS para activar la cuenta",
+        "No hay suficiente espacio en S3",
+        "Existe una denegación no explícita para todos los usuarios nuevos"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "216.Un auditor externo solicita un registro de todos los accesos a los recursos de AWS en la cuenta de la empresa. ¿Qué servicio proporciona esta información?",
+      opciones: [
+        "AWS CloudTrail",
+        "Amazon CloudFront",
+        "AWS CloudFormation",
+        "Amazon CloudWatch"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "217.¿Cuál de las siguientes afirmaciones es verdadera sobre Amazon Cloud Directory?",
+      opciones: [
+        "Permite organizar jerarquías de datos a través de múltiples dimensiones",
+        "Permite analizar video y flujos de datos en tiempo real",
+        "Permite acceder a AWS con credenciales existentes de Active Directory",
+        "Permite registrar y administrar nombres de dominio"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "218.Un usuario ha abierto un caso de soporte 'Producción Inactiva'. ¿Cuál es el tiempo de respuesta esperado?",
+      opciones: [
+        "12 horas",
+        "15 minutos",
+        "24 horas",
+        "Una hora"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "219.¿Cuál de las siguientes es una práctica recomendada para lograr alta disponibilidad en una aplicación en AWS?",
+      opciones: [
+        "Desplegar la aplicación en al menos dos Zonas de Disponibilidad",
+        "Usar ELB en múltiples regiones",
+        "Desplegar el código en al menos dos servidores en la misma AZ",
+        "Reescribir el código para manejar todas las solicitudes"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "220.¿Qué se debe considerar en un análisis TCO al comparar AWS con on-premise? (Elige dos)",
+      opciones: [
+        "Costos de mano de obra y TI",
+        "Consumo de energía y refrigeración",
+        "Potencia de cómputo EBS",
+        "Arquitectura de software",
+        "Compatibilidad de software"
+      ],
+      correcta: [0, 1]
+    },
+    {
+      pregunta: "221.Tu empresa requiere una respuesta en menos de 15 minutos para sistemas críticos alojados en AWS. ¿Qué plan de soporte se necesita?",
+      opciones: [
+        "AWS Basic Support",
+        "AWS Developer Support",
+        "AWS Business Support",
+        "AWS Enterprise Support"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "222.¿Cuáles de las siguientes ofertas de AWS son servicios serverless? (Elige dos)",
+      opciones: [
+        "Amazon EC2",
+        "AWS Lambda",
+        "Amazon DynamoDB",
+        "Amazon EMR",
+        "Amazon RDS"
+      ],
+      correcta: [1, 2]
+    },
+    {
+      pregunta: "223.¿Qué servicio de AWS permite adquirir e implementar certificados SSL/TLS rápidamente?",
+      opciones: [
+        "Amazon GuardDuty",
+        "AWS ACM",
+        "Amazon Detective",
+        "AWS WAF"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "224.¿Qué servicio de AWS se integra con Chef para automatizar la configuración de instancias EC2?",
+      opciones: [
+        "AWS Config",
+        "AWS OpsWorks",
+        "Auto Scaling",
+        "AWS CloudFormation"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "225.Un cliente quiere almacenar objetos y hacerlos descargables por internet. ¿Qué servicio de AWS puede usar?",
+      opciones: [
+        "Amazon EBS",
+        "Amazon EFS",
+        "Amazon S3",
+        "Amazon Instance Store"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "226.¿Qué servicio permite monitorear las solicitudes HTTP y HTTPS reenviadas a Amazon CloudFront?",
+      opciones: [
+        "AWS WAF",
+        "Amazon CloudWatch",
+        "AWS Cloud9",
+        "AWS CloudTrail"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "227.Una empresa migra una aplicación web cuya capacidad se usa constantemente todo el año. ¿Qué opción es más rentable?",
+      opciones: [
+        "Instancias On-Demand",
+        "Hosts Dedicados",
+        "Instancias Spot",
+        "Instancias Reservadas"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "228.Una empresa quiere otorgar acceso permanente para gestionar DynamoDB. ¿Cuál es la mejor práctica recomendada?",
+      opciones: [
+        "Crear un rol IAM con permisos de DynamoDB",
+        "Crear un rol IAM con permisos de administrador",
+        "Crear un usuario IAM con permisos de DynamoDB",
+        "Crear un usuario IAM con permisos de administrador"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "229.¿Cuál es la mejor práctica al otorgar permisos a aplicaciones en EC2?",
+      opciones: [
+        "Generar nuevas claves de acceso cada vez que se delega",
+        "Guardar las credenciales directamente en el código",
+        "Usar credenciales temporales (roles IAM)",
+        "No hacer nada; las apps en EC2 no necesitan permisos"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "230.¿Qué ayuda a los clientes de AWS a ahorrar costos al migrar cargas de trabajo?",
+      opciones: [
+        "Usar servidores en lugar de servicios gestionados",
+        "Usar licencias de software de terceros ya existentes",
+        "Migrar a ubicaciones edge en lugar de regiones",
+        "Usar AWS Outposts para todo"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "231.Una aplicación monolítica heredada necesita desacoplarse. ¿Qué servicio de AWS se debe usar?",
+      opciones: [
+        "Amazon SQS",
+        "Virtual Private Gateway",
+        "AWS Artifact",
+        "Amazon CloudFront"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "232.¿Qué servicios permiten habilitar la Autenticación Multifactor virtual? (Elige dos)",
+      opciones: [
+        "Amazon Connect",
+        "AWS CLI",
+        "AWS IAM",
+        "Amazon SNS",
+        "Amazon VPC"
+      ],
+      correcta: [1, 2]
+    },
+    {
+      pregunta: "233.Según buenas prácticas, ¿qué es lo más adecuado para procesar muchos archivos binarios?",
+      opciones: [
+        "Escalar instancias EC2 verticalmente",
+        "Ejecutar instancias RDS en paralelo",
+        "Escalar RDS verticalmente",
+        "Ejecutar instancias EC2 en paralelo"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "234.Una empresa usará S3 y CloudFront para distribuir videos. ¿Qué herramienta puede estimar el costo?",
+      opciones: [
+        "AWS Cost Explorer",
+        "AWS Pricing Calculator",
+        "AWS Budgets",
+        "AWS Cost & Usage Report"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "235.¿Qué debes hacer si ves recursos en tu consola de AWS que no recuerdas haber creado? (Elige dos)",
+      opciones: [
+        "Detener todos los servicios y abrir una investigación",
+        "Dar tu contraseña root al soporte de AWS",
+        "Revisar logs de CloudTrail y borrar usuarios sospechosos",
+        "Abrir una investigación y eliminar IAM comprometidos",
+        "Cambiar la contraseña root y las de los usuarios IAM"
+      ],
+      correcta: [3, 4]
+    },
+    {
+      pregunta: "236.Una práctica clave al diseñar soluciones en AWS es minimizar las dependencias entre componentes para que la falla de uno no afecte a los demás. ¿Cómo se llama esta práctica?",
+      opciones: [
+        "Acoplamiento elástico",
+        "Acoplamiento débil (Loosely Coupling)",
+        "Acoplamiento escalable",
+        "Acoplamiento fuerte (Tightly Coupling)"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "237.¿Qué servicio de AWS ofrece un sistema de archivos NFS que puede montarse simultáneamente desde múltiples instancias EC2?",
+      opciones: [
+        "Amazon Elastic File System",
+        "Amazon S3",
+        "Amazon Elastic Block Store",
+        "AWS Storage Gateway"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "238.Las Zonas de Disponibilidad dentro de una Región están conectadas con enlaces de baja latencia. ¿Cuál es un beneficio de estos enlaces?",
+      opciones: [
+        "Crear conexión privada con tu data center",
+        "Lograr alta disponibilidad global",
+        "Automatizar el aprovisionamiento de recursos",
+        "Permitir replicación sincrónica de datos"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "239.¿Qué afirmaciones son verdaderas sobre los lenguajes compatibles con AWS Lambda? (Elige dos)",
+      opciones: [
+        "Solo soporta Python y Node.js, pero se puede usar plugins de terceros",
+        "Soporta lenguajes como Node.js, Python y Java nativamente",
+        "Lambda es un lenguaje propietario de AWS",
+        "Lambda no soporta lenguajes de programación",
+        "Puede soportar cualquier lenguaje usando una API"
+      ],
+      correcta: [1, 4]
+    },
+    {
+      pregunta: "240.¿Cuáles son las capacidades de AWS X-Ray? (Elige dos)",
+      opciones: [
+        "Desacopla automáticamente componentes de aplicaciones",
+        "Facilita el seguimiento de solicitudes para detectar problemas",
+        "Ayuda a mejorar el rendimiento de la aplicación",
+        "Despliega aplicaciones en EC2",
+        "Despliega aplicaciones en servidores locales"
+      ],
+      correcta: [1, 2]
+    },
+    {
+      pregunta: "241.¿Cuál de las siguientes afirmaciones es verdadera sobre las Zonas de Disponibilidad y ubicaciones perimetrales (edge locations)?",
+      opciones: [
+        "Las edge locations están dentro de Zonas de Disponibilidad",
+        "Una AZ está dentro de una edge location para distribuir contenido",
+        "Una AZ es una ubicación con múltiples edge locations aisladas",
+        "Una AZ es una ubicación aislada en una región, mientras que las edge están en muchas ciudades del mundo"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "242.¿Qué características están incluidas en el plan AWS Business Support? (Elige dos)",
+      opciones: [
+        "Acceso 24x7 a atención al cliente",
+        "Acceso a ingenieros de soporte solo por email y en horario laboral",
+        "Acceso al servicio de IEM por un costo adicional",
+        "Acceso 24x7 a TAM",
+        "Acceso parcial a los chequeos de Trusted Advisor"
+      ],
+      correcta: [0, 2]
+    },
+    {
+      pregunta: "243.Una empresa desarrolla una app móvil y quiere permitir autenticación con identidades de Amazon, Apple, Facebook o Google. ¿Qué servicio debe usar?",
+      opciones: [
+        "Amazon GuardDuty",
+        "Amazon Personalize",
+        "Amazon Cognito",
+        "AWS IAM"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "244.¿Qué servicio de AWS permite definir políticas y configuraciones como código reutilizable entre proyectos?",
+      opciones: [
+        "AWS CloudFormation",
+        "AWS Config",
+        "AWS CloudTrail",
+        "AWS Auto Scaling"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "245.¿Cuáles son ventajas de usar AWS como proveedor de cloud computing? (Elige dos)",
+      opciones: [
+        "Elimina la necesidad de monitorear servidores",
+        "Gestiona todas las auditorías de cumplimiento",
+        "Provee hardware personalizado",
+        "Elimina la necesidad de adivinar la capacidad de infraestructura",
+        "Permite cambiar CAPEX por OPEX"
+      ],
+      correcta: [3, 4]
+    },
+    {
+      pregunta: "246.Un cliente migrará bases de datos Microsoft SQL Server a AWS. ¿Qué servicios puede usar? (Elige dos)",
+      opciones: [
+        "AWS Fargate",
+        "Amazon EC2",
+        "Amazon RDS",
+        "AWS DMS",
+        "AWS Lambda"
+      ],
+      correcta: [1, 2]
+    },
+    {
+      pregunta: "247.¿Qué servicio puede realizar verificaciones de salud sobre instancias EC2?",
+      opciones: [
+        "AWS CloudFormation",
+        "Amazon Route 53",
+        "Amazon Chime",
+        "Amazon Aurora"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "248.Una empresa desarrolla una app con reconocimiento facial para etiquetado automático de fotos. ¿Qué servicio debe usar?",
+      opciones: [
+        "Amazon Comprehend",
+        "AWS IAM",
+        "Amazon Polly",
+        "Amazon Rekognition"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "249.¿Cuáles son ejemplos de bases de datos gestionadas por AWS? (Elige dos)",
+      opciones: [
+        "Amazon Neptune",
+        "Amazon CloudSearch",
+        "Microsoft SQL Server en EC2",
+        "MySQL en EC2",
+        "Amazon RDS para MySQL"
+      ],
+      correcta: [0, 4]
+    },
+    {
+      pregunta: "250.Una empresa necesita ejecutar tareas masivas de procesamiento de imágenes y video, sin urgencia, pero quiere minimizar costos. ¿Qué tipo de instancia EC2 debe usar?",
+      opciones: [
+        "EC2 On-Demand",
+        "Instancias Reservadas sin prepago",
+        "EC2 Spot",
+        "Instancias Reservadas con prepago total"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "251.Hay un requerimiento para otorgar al equipo DevOps acceso administrativo total en una cuenta de AWS. ¿Quién puede otorgar estos permisos?",
+      opciones: [
+        "Propietario de la cuenta de AWS",
+        "Gerente técnico de cuenta de AWS",
+        "Equipo de seguridad de AWS",
+        "Ingenieros de soporte en la nube de AWS"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "252.Necesitas migrar una gran cantidad de cargas de trabajo on-premise a AWS. ¿Qué servicio es el más adecuado?",
+      opciones: [
+        "AWS File Transfer Acceleration",
+        "AWS Server Migration Service",
+        "AWS Database Migration Service",
+        "AWS Application Discovery Service"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "253.¿Cuáles son algunos beneficios clave de usar AWS CloudFormation? (Elige dos)",
+      opciones: [
+        "Ayuda a los clientes a desplegar aplicaciones sin preocuparse de la infraestructura",
+        "Aplica funciones de seguridad IAM avanzadas automáticamente",
+        "Automatiza el aprovisionamiento y actualización de infraestructura de forma segura",
+        "Permite modelar toda la infraestructura en un solo archivo de texto",
+        "Compila y construye código de aplicación de forma oportuna"
+      ],
+      correcta: [2, 3]
+    },
+    {
+      pregunta: "254.¿Cuál es un modelo de despliegue que conecta recursos en la nube con infraestructura no ubicada en la nube?",
+      opciones: [
+        "On-premises",
+        "Mixto",
+        "Híbrido",
+        "En la nube"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "255.Una empresa aloja cargas de trabajo críticas en una región de AWS. Necesitan crear una copia espejo del entorno en otra región, lista en minutos ante una caída. ¿Qué servicio usar?",
+      opciones: [
+        "CloudEndure Disaster Recovery",
+        "CloudEndure Migration",
+        "AWS Backup",
+        "AWS Glue"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "256.¿Qué clase de almacenamiento de S3 es más adecuada para hospedar archivos estáticos de un sitio e-commerce con patrones estables?",
+      opciones: [
+        "S3 Standard-IA",
+        "S3 Intelligent-Tiering",
+        "S3 Glacier Deep Archive",
+        "S3 Standard"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "257.Quieres crear una copia de respaldo de tus datos en otra ubicación geográfica. ¿Dónde deberías hacerlo?",
+      opciones: [
+        "En otra ubicación edge",
+        "En otra región",
+        "En otra VPC",
+        "En otra zona de disponibilidad"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "258.¿Qué afirmación es verdadera sobre la seguridad en Amazon EC2?",
+      opciones: [
+        "Debes usar volúmenes de instancia para guardar datos de acceso",
+        "Debes aplicar parches regularmente al sistema operativo y apps en EC2",
+        "Debes desplegar componentes críticos en la AZ que más confíes",
+        "Puedes rastrear llamadas API con Amazon Athena"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "259.¿Qué ofrece AWS Cost Explorer para ayudar a administrar tus gastos?",
+      opciones: [
+        "Comparaciones de costos entre AWS y on-premise",
+        "Estimaciones precisas basadas en uso esperado",
+        "Facturación consolidada",
+        "Pronósticos de costos precisos de hasta 12 meses"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "260.¿Qué característica de Amazon RDS realiza conmutación por error automática cuando la base de datos primaria falla?",
+      opciones: [
+        "RDS Single-AZ",
+        "RDS Write Replica",
+        "Snapshots de RDS",
+        "RDS Multi-AZ"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "261.Estas usando instancias EC2 On-Demand para desarrollo. ¿Qué puedes hacer para reducir los cargos cuando no las usas?",
+      opciones: [
+        "Eliminar los volúmenes EBS",
+        "No se puede reducir el costo de On-Demand",
+        "Terminar las instancias",
+        "Detener las instancias"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "262.¿Qué estrategia ayuda a proteger tu cuenta root de AWS?",
+      opciones: [
+        "Eliminar las claves de acceso si no son necesarias",
+        "Activar MFA y usar la cuenta root para todo",
+        "Acceder solo desde tu teléfono personal",
+        "Compartir claves de acceso con personas de confianza"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "263.¿Qué factores afectan el precio de Amazon EBS? (Elige dos)",
+      opciones: [
+        "Tamaño de volúmenes aprovisionados por mes",
+        "Capacidad de cómputo utilizada",
+        "Cantidad de datos almacenados en snapshots",
+        "Tiempo de cómputo usado",
+        "Número de dispositivos Snowball solicitados"
+      ],
+      correcta: [0, 2]
+    },
+    {
+      pregunta: "264.Creaste 6 cuentas IAM para tu equipo DevOps. ¿Qué recomienda AWS al otorgarles permisos?",
+      opciones: [
+        "Adjuntar una política distinta por usuario",
+        "Aplicar el principio de menor privilegio",
+        "No otorgar permisos al equipo DevOps",
+        "Crear 6 contraseñas distintas"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "265.¿Qué tiene mayor impacto en el costo? (Elige dos)",
+      opciones: [
+        "Cargos de cómputo",
+        "Número de servicios usados",
+        "Costos por transferencia de entrada",
+        "Costos por transferencia de salida",
+        "Número de roles IAM creados"
+      ],
+      correcta: [0, 3]
+    },
+    {
+      pregunta: "266.¿Quién recibirá el mayor descuento?",
+      opciones: [
+        "Usuario con On-demand, Convertible, Parcial Upfront",
+        "Usuario con Reserved, Convertible, Todo Upfront",
+        "Usuario con Reserved, Standard, Sin Upfront",
+        "Usuario con Reserved, Standard, Todo Upfront"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "267.¿Qué opción está disponible al comprar instancias EC2?",
+      opciones: [
+        "Ofertar para obtener precios bajos",
+        "Registrar instancias para descuentos por volumen",
+        "Comprar Dedicated Instances con 90% de descuento",
+        "Pagar por adelantado para costos horarios más bajos"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "268.¿Qué significa 'Economías de escala' en AWS?",
+      opciones: [
+        "Ahorro al consumir más",
+        "Con el tiempo pagas más por usar AWS",
+        "AWS baja los costos conforme crece",
+        "Puedes pagar a medida que usas"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "269.Una empresa tiene picos de tráfico por ventas relámpago. ¿Qué servicio puede ajustar la capacidad automáticamente?",
+      opciones: [
+        "AWS Auto Scaling",
+        "Amazon EC2",
+        "Amazon EFS",
+        "Amazon ElastiCache"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "270.¿Qué es cierto sobre Amazon VPC?",
+      opciones: [
+        "Permite controlar interacciones de usuarios con recursos",
+        "Permite controlar completamente el entorno de red virtual",
+        "AWS se encarga de toda su configuración",
+        "Ayuda a revisar arquitectura y adoptar buenas prácticas"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "271.¿Qué herramienta puede usar alguien que no es cliente de AWS para comparar costos entre on-premise y AWS?",
+      opciones: [
+        "AWS Cost Explorer",
+        "AWS Pricing Calculator",
+        "AWS Budgets",
+        "AWS TCO Calculator"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "272.¿Qué servicios ofrecen auditoría en tiempo real para cumplimiento y vulnerabilidades? (Elige dos)",
+      opciones: [
+        "AWS Config",
+        "Amazon Redshift",
+        "Amazon MQ",
+        "AWS Trusted Advisor",
+        "Amazon Cognito"
+      ],
+      correcta: [0, 3]
+    },
+    {
+      pregunta: "273.¿Qué servicio de AWS usa Puppet para automatizar la configuración de instancias EC2?",
+      opciones: [
+        "AWS OpsWorks",
+        "AWS CloudFormation",
+        "AWS Quick Starts",
+        "AWS CloudTrail"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "274.Una organización usa una arquitectura híbrida. ¿Qué servicio permite desplegar apps en servidores on-premise o AWS?",
+      opciones: [
+        "Amazon Kinesis",
+        "Amazon QuickSight",
+        "AWS CodeDeploy",
+        "Amazon Athena"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "275.¿Qué servicios son basados en servidor? (Elige dos)",
+      opciones: [
+        "Amazon RDS",
+        "Amazon DynamoDB",
+        "AWS Lambda",
+        "AWS Fargate",
+        "Amazon EMR"
+      ],
+      correcta: [0, 4]
+    },
+    {
+      pregunta: "276.¿Qué describe mejor las pruebas de penetración (penetration testing)?",
+      opciones: [
+        "Probar el tiempo de respuesta de la app desde distintas ubicaciones",
+        "Probar la red en busca de vulnerabilidades explotables",
+        "Probar las instancias para encontrar las que no están saludables",
+        "Probar el software para detectar errores"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "277.¿Cuáles son casos de uso de Amazon EMR? (Elige dos)",
+      opciones: [
+        "Permite hacer backups de grandes cantidades de datos a bajo costo",
+        "Permite mover datos a escala Exabyte a AWS",
+        "Permite analizar y procesar grandes volúmenes de datos de forma oportuna",
+        "Permite ejecutar y escalar fácilmente Spark, Hadoop y frameworks de Big Data",
+        "Permite ejecutar y gestionar contenedores Docker"
+      ],
+      correcta: [2, 3]
+    },
+    {
+      pregunta: "278.El CTO te pide contactar a soporte de AWS por chat para dudas sobre EBS, pero no ves esa opción. ¿Qué deberías hacer?",
+      opciones: [
+        "El soporte por chat no existe en AWS",
+        "Está disponible en todos los planes por un costo adicional si se solicita",
+        "Actualizar al plan Business como mínimo",
+        "Pasar del plan Básico al Developer"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "279.Un desarrollador quiere desplegar y administrar rápidamente su aplicación en la nube pero no tiene experiencia. ¿Qué servicio le conviene usar?",
+      opciones: [
+        "AWS Fargate",
+        "AWS Batch",
+        "Amazon Personalize",
+        "AWS Elastic Beanstalk"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "280.¿Cuál es la mejor descripción del modelo de precios 'pago por uso' de AWS?",
+      opciones: [
+        "Reemplazas bajos gastos iniciales por pagos variables grandes",
+        "Reemplazas bajos gastos iniciales por pagos fijos grandes",
+        "Reemplazas altos gastos iniciales por pagos fijos bajos",
+        "Reemplazas grandes gastos de capital por pagos variables bajos"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "281.¿Qué tareas realiza AWS en tu lugar con bases de datos RDS? (Elige dos)",
+      opciones: [
+        "Configuración de la base de datos",
+        "Protección del tráfico de red",
+        "Gestión del sistema operativo",
+        "Gestión de accesos",
+        "Gestión de reglas de firewall"
+      ],
+      correcta: [0, 2]
+    },
+    {
+      pregunta: "282.¿Qué estrategia ayuda a analizar costos en AWS?",
+      opciones: [
+        "Usar etiquetas (tags) para agrupar recursos",
+        "Usar CloudFormation para automatizar el despliegue",
+        "Desplegar recursos del mismo tipo en distintas regiones",
+        "Configurar Amazon Inspector para analizar costos"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "283.Una empresa de medios necesita transferir grandes volúmenes de datos diariamente a AWS con conexión constante. ¿Qué servicio debe usar?",
+      opciones: [
+        "AWS Direct Connect",
+        "Amazon Comprehend",
+        "AWS Snowmobile",
+        "AWS VPN"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "284.¿Cuál es el principal beneficio de AWS Storage Gateway?",
+      opciones: [
+        "Automatiza procesos ETL",
+        "Proporciona dispositivos físicos para migración",
+        "Integra entornos on-premise con almacenamiento en la nube",
+        "Ofrece almacenamiento físico seguro con claves"
+      ],
+      correcta: 2
+    },
+    {
+      pregunta: "285.Necesitas respaldar tu base de datos de forma rentable con acceso inmediato. ¿Qué opción es mejor?",
+      opciones: [
+        "Amazon S3 Glacier Deep Archive",
+        "Amazon S3 Standard-IA",
+        "Amazon S3 Glacier",
+        "Instance Store"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "286.¿Qué servicio enruta tráfico al punto que ofrece mejor rendimiento para usuarios globales?",
+      opciones: [
+        "AWS Global Accelerator",
+        "AWS Data Pipeline",
+        "AWS DAX Accelerator",
+        "AWS Transfer Acceleration"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "287.¿Por qué las arquitecturas serverless son más económicas que las basadas en servidores?",
+      opciones: [
+        "Usan dispositivos de cómputo más potentes",
+        "Solo usan recursos cuando el código se ejecuta",
+        "Se obtienen descuentos al reservar capacidad serverless",
+        "Se escalan automáticamente según la demanda"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "288.¿Cuáles son casos de uso de Amazon Route 53? (Elige dos)",
+      opciones: [
+        "Conectividad punto a punto on-premise y AWS",
+        "Detectar cambios de configuración",
+        "Gestión y configuración DNS",
+        "Gestión de tráfico global mediante varios tipos de enrutamiento",
+        "Recomendaciones de seguridad"
+      ],
+      correcta: [2, 3]
+    },
+    {
+      pregunta: "289.Necesitas transferir 200 TB desde on-premise a la nube de forma rentable. ¿Qué servicio usar?",
+      opciones: [
+        "AWS Snowmobile",
+        "AWS Import/Export",
+        "AWS DMS",
+        "AWS Snowball"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "290.Tienes una app IoT en tiempo real que requiere latencia sub-milisegundo. ¿Qué servicio debes usar?",
+      opciones: [
+        "Amazon Redshift",
+        "Amazon Athena",
+        "AWS Cloud9",
+        "Amazon ElastiCache for Redis"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "291.¿Qué puede ayudarte a proteger datos sensibles en Amazon S3? (Elige dos)",
+      opciones: [
+        "Eliminar claves de cifrado luego de usarlas",
+        "No preocuparte por el cifrado con AWS",
+        "Activar cifrado en S3",
+        "Cifrar datos antes de subirlos",
+        "Eliminar todos los usuarios IAM con acceso a S3"
+      ],
+      correcta: [2, 3]
+    },
+    {
+      pregunta: "292.¿Qué servicio ayuda a desarrolladores a compilar y testear código?",
+      opciones: [
+        "AWS CodeDeploy",
+        "AWS CodeCommit",
+        "CloudEndure",
+        "AWS CodeBuild"
+      ],
+      correcta: 3
+    },
+    {
+      pregunta: "293.¿Qué factores afectan cuánto pagas por almacenar objetos en S3? (Elige dos)",
+      opciones: [
+        "Usar cifrado por defecto",
+        "Número de volúmenes EBS",
+        "Clase de almacenamiento usada",
+        "Crear y borrar buckets",
+        "Tamaño total en GB de todos los objetos"
+      ],
+      correcta: [2, 4]
+    },
+    {
+      pregunta: "294.¿Qué provee Amazon CloudFront? (Elige dos)",
+      opciones: [
+        "Seguimiento de actividad de usuario y API",
+        "Alta disponibilidad mediante cacheo en edge",
+        "Recuperación ante desastres más rápida",
+        "Almacenamiento archivado de bajo costo",
+        "Entrega de contenido con baja latencia"
+      ],
+      correcta: [1, 4]
+    },
+    {
+      pregunta: "295.Tu contact center actual tiene muchos problemas. ¿Qué servicio ofrece una solución en la nube mejorada?",
+      opciones: [
+        "Amazon Lightsail",
+        "Amazon Connect",
+        "AWS Direct Connect",
+        "AWS Elastic Beanstalk"
+      ],
+      correcta: 1
+    },
+    {
+      pregunta: "296.Migraste recientemente tu aplicación a AWS. ¿Cómo puedes ver los costos aplicados?",
+      opciones: [
+        "Usando AWS Cost & Usage Report",
+        "Usando el panel TCO de AWS",
+        "Usando el panel de logs de CloudWatch",
+        "Usando el panel de Amazon VPC"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "297.¿Cuáles son tipos válidos de instancias reservadas EC2? (Elige dos)",
+      opciones: [
+        "Convertible",
+        "Expedited",
+        "Bulk",
+        "Spot",
+        "Standard"
+      ],
+      correcta: [0, 4]
+    },
+    {
+      pregunta: "298.¿Qué servicio te da acceso a todos los informes y certificaciones emitidos por auditores de AWS?",
+      opciones: [
+        "AWS Artifact",
+        "AWS Config",
+        "Amazon CloudWatch",
+        "AWS CloudTrail"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "299.Administras un blog en AWS con entornos de desarrollo, prueba y producción. ¿Qué puedes usar para crear una consola personalizada para cada entorno y gestionar fácilmente los recursos?",
+      opciones: [
+        "AWS Resource Groups",
+        "AWS Placement Groups",
+        "AWS Management Console",
+        "AWS Tag Editor"
+      ],
+      correcta: 0
+    },
+    {
+      pregunta: "300.¿Qué servicio de AWS recopila métricas de instancias EC2 en ejecución?",
+      opciones: [
+        "Amazon Inspector",
+        "Amazon CloudWatch",
+        "AWS CloudFormation",
+        "AWS CloudTrail"
+      ],
+      correcta: 1
+    }
+    
+    
+    
+    
+    
+    
+    ]
+    let actual = localStorage.getItem("progresoAWS") ? parseInt(localStorage.getItem("progresoAWS")) : 0;
+    let correctas = localStorage.getItem("puntosCorrectos") ? parseInt(localStorage.getItem("puntosCorrectos")) : 0;
+    let incorrectas = localStorage.getItem("puntosIncorrectos") ? parseInt(localStorage.getItem("puntosIncorrectos")) : 0;
+
+    function cargarPregunta() {
+      if (actual >= preguntas.length) {
+        mostrarResultadoFinal();
+        return;
+      }
+
+      const q = preguntas[actual];
+      document.getElementById("question").textContent = q.pregunta;
+      const opcionesDiv = document.getElementById("options");
+      opcionesDiv.innerHTML = "";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("next-btn").style.display = "none";
+      document.getElementById("restart-btn").style.display = "none";
+      
+      q.opciones.forEach((opcion, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = opcion;
+        btn.onclick = () => comprobarRespuesta(i);
+        const div = document.createElement("div");
+        div.className = "option";
+        div.appendChild(btn);
+        opcionesDiv.appendChild(div);
+      });
+    }
+
+    function comprobarRespuesta(indice) {
+      const correcta = preguntas[actual].correcta;
+      const feedback = document.getElementById("feedback");
+
+      const esCorrecto = Array.isArray(correcta)
+        ? correcta.includes(indice)
+        : indice === correcta;
+
+      if (esCorrecto) {
+        feedback.textContent = "✅ ¡Correcto!";
+        correctas++;
+        localStorage.setItem("puntosCorrectos", correctas);
+      } else {
+        const correctaTexto = Array.isArray(correcta)
+          ? correcta.map(i => preguntas[actual].opciones[i]).join(" y ")
+          : preguntas[actual].opciones[correcta];
+        feedback.textContent = "❌ Incorrecto. La respuesta correcta es: " + correctaTexto;
+        incorrectas++;
+        localStorage.setItem("puntosIncorrectos", incorrectas);
+      }
+
+      document.getElementById("next-btn").style.display = "inline-block";
+      document.getElementById("restart-btn").style.display = "inline-block";
+    }
+
+    function siguientePregunta() {
+      actual++;
+      localStorage.setItem("progresoAWS", actual);
+      cargarPregunta();
+    }
+
+    function mostrarResultadoFinal() {
+      const total = correctas + incorrectas;
+      const porcentaje = Math.round((correctas / total) * 100);
+
+      document.getElementById("question").innerHTML = `🎉 ¡Quiz completado!<br>
+        ✅ Correctas: ${correctas}<br>
+        ❌ Incorrectas: ${incorrectas}<br>
+        📊 Puntaje: ${porcentaje}%`;
+      document.getElementById("options").innerHTML = "";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("next-btn").style.display = "none";
+      document.getElementById("restart-btn").style.display = "inline-block";
+      //document.getElementById("restart-btn").style.display = "none"; // <-- esta es la única línea cambiada
+    }
+
+    function reiniciarQuiz() {
+      actual = 0;
+      correctas = 0;
+      incorrectas = 0;
+      localStorage.removeItem("progresoAWS");
+      localStorage.removeItem("puntosCorrectos");
+      localStorage.removeItem("puntosIncorrectos");
+      cargarPregunta();
+    }
+
+    cargarPregunta();
+  
+  </script>
+</body>
+</html>
