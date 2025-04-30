@@ -1114,9 +1114,9 @@
 
     ];
 
-    let actual = localStorage.getItem("progresoAWS") ? parseInt(localStorage.getItem("progresoAWS")) : 0;
-    let correctas = localStorage.getItem("puntosCorrectos") ? parseInt(localStorage.getItem("puntosCorrectos")) : 0;
-    let incorrectas = localStorage.getItem("puntosIncorrectos") ? parseInt(localStorage.getItem("puntosIncorrectos")) : 0;
+    let actual = localStorage.getItem("progresoAWS1") ? parseInt(localStorage.getItem("progresoAWS1")) : 0;
+    let correctas = localStorage.getItem("puntosCorrectos1") ? parseInt(localStorage.getItem("puntosCorrectos1")) : 0;
+    let incorrectas = localStorage.getItem("puntosIncorrectos1") ? parseInt(localStorage.getItem("puntosIncorrectos1")) : 0;
 
     function cargarPregunta() {
       if (actual >= preguntas.length) {
@@ -1154,14 +1154,14 @@
       if (esCorrecto) {
         feedback.textContent = "✅ ¡Correcto!";
         correctas++;
-        localStorage.setItem("puntosCorrectos", correctas);
+        localStorage.setItem("puntosCorrectos1", correctas);
       } else {
         const correctaTexto = Array.isArray(correcta)
           ? correcta.map(i => preguntas[actual].opciones[i]).join(" y ")
           : preguntas[actual].opciones[correcta];
         feedback.textContent = "❌ Incorrecto. La respuesta correcta es: " + correctaTexto;
         incorrectas++;
-        localStorage.setItem("puntosIncorrectos", incorrectas);
+        localStorage.setItem("puntosIncorrectos1", incorrectas);
       }
 
       document.getElementById("next-btn").style.display = "inline-block";
@@ -1170,7 +1170,7 @@
 
     function siguientePregunta() {
       actual++;
-      localStorage.setItem("progresoAWS", actual);
+      localStorage.setItem("progresoAWS1", actual);
       cargarPregunta();
     }
 
@@ -1193,9 +1193,9 @@
       actual = 0;
       correctas = 0;
       incorrectas = 0;
-      localStorage.removeItem("progresoAWS");
-      localStorage.removeItem("puntosCorrectos");
-      localStorage.removeItem("puntosIncorrectos");
+      localStorage.removeItem("progresoAWS1");
+      localStorage.removeItem("puntosCorrectos1");
+      localStorage.removeItem("puntosIncorrectos1");
       cargarPregunta();
     }
 
